@@ -14,39 +14,39 @@ class AppRouter {
 
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
-  static GoRouter get router => GoRouter(
-        navigatorKey: _rootNavigatorKey,
-        initialLocation: Routes.clock,
-        routes: [
-          GoRoute(
-            path: Routes.clock,
-            builder: (context, state) => const ClockScreen(),
-          ),
-          GoRoute(
-            path: Routes.settings,
-            parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) => const SettingsScreen(),
-          ),
-          GoRoute(
-            path: Routes.focus,
-            builder: (context, state) => const FocusScreen(),
-          ),
-          GoRoute(
-            path: Routes.focusAnalytics,
-            builder: (context, state) => const FocusAnalyticsScreen(),
-          ),
-          GoRoute(
-            path: Routes.timer,
-            builder: (context, state) => const TimerScreen(),
-          ),
-          GoRoute(
-            path: Routes.stopwatch,
-            builder: (context, state) => const StopwatchScreen(),
-          ),
-          GoRoute(
-            path: Routes.pomodoro,
-            builder: (context, state) => const PomodoroScreen(),
-          ),
-        ],
-      );
+  static final GoRouter router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
+    initialLocation: Routes.clock,
+    routes: [
+      GoRoute(
+        path: Routes.clock,
+        builder: (context, state) => const ClockScreen(),
+      ),
+      GoRoute(
+        path: Routes.settings,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: Routes.focus,
+        builder: (context, state) => const FocusScreen(),
+      ),
+      GoRoute(
+        path: Routes.focusAnalytics,
+        builder: (context, state) => const FocusAnalyticsScreen(),
+      ),
+      GoRoute(
+        path: Routes.timer,
+        builder: (context, state) => const TimerScreen(),
+      ),
+      GoRoute(
+        path: Routes.stopwatch,
+        builder: (context, state) => const StopwatchScreen(),
+      ),
+      GoRoute(
+        path: Routes.pomodoro,
+        builder: (context, state) => const PomodoroScreen(),
+      ),
+    ],
+  );
 }

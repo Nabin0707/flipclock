@@ -17,6 +17,7 @@ class FocusScreen extends ConsumerStatefulWidget {
 class _FocusScreenState extends ConsumerState<FocusScreen> {
   Timer? _ticker;
   String? _selectedCategory;
+  bool _isFullscreen = true;
 
   @override
   void initState() {
@@ -78,13 +79,37 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categories = ref.watch(focusCategoriesProvider);
+    final rawCategories = ref.watch(focusCategoriesProvider);
+    final seen = <String>{};
+    final categories = rawCategories.where((item) {
+      final key = item.toLowerCase();
+      if (seen.contains(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    }).toList(growable: false);
     final sessions = ref.watch(focusSessionsProvider);
     final timerState = ref.watch(focusTimerProvider);
     final timerNotifier = ref.read(focusTimerProvider.notifier);
     final categoryColors = ref.watch(focusCategoryColorsProvider);
 
-    _selectedCategory ??= categories.isNotEmpty ? categories.first : null;
+    final effectiveSelectedCategory = categories.isEmpty
+        ? null
+        : (categories.contains(_selectedCategory)
+            ? _selectedCategory
+            : categories.first);
+
+    if (_selectedCategory != effectiveSelectedCategory) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _selectedCategory = effectiveSelectedCategory;
+        });
+      });
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF070808),
@@ -94,81 +119,143 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
+            onPressed: () {
+              setState(() {
+                _isFullscreen = !_isFullscreen;
+              });
+            },
+            icon: Icon(
+              _isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
+            ),
+            tooltip: _isFullscreen ? 'Exit fullscreen' : 'Fullscreen',
+          ),
+          IconButton(
             onPressed: () => context.push(Routes.focusAnalytics),
             icon: const Icon(Icons.analytics_outlined),
             tooltip: 'Open analytics',
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-        children: [
-          _FullScreenFocusHero(
-            timerState: timerState,
-            liveElapsed: timerNotifier.liveElapsed,
-            selectedCategory: _selectedCategory,
-            categories: categories,
-            categoryColors: categoryColors,
-            onCategoryChanged: (value) {
-              setState(() {
-                _selectedCategory = value;
-              });
-            },
-            onAddCategory: () => _promptAddCategory(context),
-            onStart: () {
-              if (_selectedCategory == null) {
-                return;
-              }
-              timerNotifier.start(_selectedCategory!);
-            },
-            onPause: timerNotifier.pause,
-            onReset: timerNotifier.reset,
-            onStopAndSave: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              final session = await timerNotifier.stopAndCreateSession();
-              if (!mounted || session == null) {
-                return;
-              }
-              await ref
-                  .read(focusSessionsProvider.notifier)
-                  .addSession(session);
-              if (!mounted) {
-                return;
-              }
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Session saved: ${_formatDuration(session.duration)} (${session.category})',
+      body: _isFullscreen
+          ? Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 760),
+                  child: _FullScreenFocusHero(
+                    timerState: timerState,
+                    liveElapsed: timerNotifier.liveElapsed,
+                    selectedCategory: effectiveSelectedCategory,
+                    categories: categories,
+                    categoryColors: categoryColors,
+                    onCategoryChanged: (value) {
+                      setState(() {
+                        _selectedCategory = value;
+                      });
+                    },
+                    onAddCategory: () => _promptAddCategory(context),
+                    onStart: () {
+                      if (effectiveSelectedCategory == null) {
+                        return;
+                      }
+                      timerNotifier.start(effectiveSelectedCategory);
+                    },
+                    onPause: timerNotifier.pause,
+                    onReset: timerNotifier.reset,
+                    onStopAndSave: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      final session =
+                          await timerNotifier.stopAndCreateSession();
+                      if (!mounted || session == null) {
+                        return;
+                      }
+                      await ref
+                          .read(focusSessionsProvider.notifier)
+                          .addSession(session);
+                      if (!mounted) {
+                        return;
+                      }
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Session saved: ${_formatDuration(session.duration)} (${session.category})',
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          _CategoryManagementCard(
-            categories: categories,
-            categoryColors: categoryColors,
-            onDelete: (category) async {
-              if (_selectedCategory == category) {
-                final remaining =
-                    categories.where((item) => item != category).toList();
-                setState(() {
-                  _selectedCategory =
-                      remaining.isEmpty ? null : remaining.first;
-                });
-              }
-              await ref
-                  .read(focusCategoriesProvider.notifier)
-                  .removeCategory(category);
-            },
-          ),
-          const SizedBox(height: 12),
-          _SessionsCard(
-            sessions: sessions,
-            categoryColors: categoryColors,
-          ),
-        ],
-      ),
+              ),
+            )
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+              children: [
+                _FullScreenFocusHero(
+                  timerState: timerState,
+                  liveElapsed: timerNotifier.liveElapsed,
+                  selectedCategory: effectiveSelectedCategory,
+                  categories: categories,
+                  categoryColors: categoryColors,
+                  onCategoryChanged: (value) {
+                    setState(() {
+                      _selectedCategory = value;
+                    });
+                  },
+                  onAddCategory: () => _promptAddCategory(context),
+                  onStart: () {
+                    if (effectiveSelectedCategory == null) {
+                      return;
+                    }
+                    timerNotifier.start(effectiveSelectedCategory);
+                  },
+                  onPause: timerNotifier.pause,
+                  onReset: timerNotifier.reset,
+                  onStopAndSave: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final session = await timerNotifier.stopAndCreateSession();
+                    if (!mounted || session == null) {
+                      return;
+                    }
+                    await ref
+                        .read(focusSessionsProvider.notifier)
+                        .addSession(session);
+                    if (!mounted) {
+                      return;
+                    }
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Session saved: ${_formatDuration(session.duration)} (${session.category})',
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _CategoryManagementCard(
+                  categories: categories,
+                  categoryColors: categoryColors,
+                  onDelete: (category) async {
+                    if (effectiveSelectedCategory == category) {
+                      final remaining =
+                          categories.where((item) => item != category).toList();
+                      setState(() {
+                        _selectedCategory =
+                            remaining.isEmpty ? null : remaining.first;
+                      });
+                    }
+                    await ref
+                        .read(focusCategoriesProvider.notifier)
+                        .removeCategory(category);
+                  },
+                ),
+                const SizedBox(height: 12),
+                _SessionsCard(
+                  sessions: sessions,
+                  categoryColors: categoryColors,
+                ),
+              ],
+            ),
     );
   }
 }
@@ -202,8 +289,10 @@ class _FullScreenFocusHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveSelection =
+        categories.contains(selectedCategory) ? selectedCategory : null;
     final activeColor =
-        categoryColors[selectedCategory] ?? const Color(0xFFE8A020);
+        categoryColors[effectiveSelection] ?? const Color(0xFFE8A020);
 
     return Container(
       width: double.infinity,
@@ -227,37 +316,53 @@ class _FullScreenFocusHero extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: selectedCategory,
-                  dropdownColor: const Color(0xFF242730),
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Focus Category',
-                    labelStyle: TextStyle(color: Colors.white70),
-                  ),
-                  items: categories
-                      .map(
-                        (item) => DropdownMenuItem(
-                          value: item,
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: categoryColors[item] ?? Colors.white70,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(child: Text(item)),
-                            ],
-                          ),
+                child: categories.isEmpty
+                    ? const InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Focus Category',
+                          labelStyle: TextStyle(color: Colors.white70),
+                        ),
+                        child: Text(
+                          'No category yet. Add one.',
+                          style: TextStyle(color: Colors.white70),
                         ),
                       )
-                      .toList(),
-                  onChanged: onCategoryChanged,
-                ),
+                    : DropdownButtonFormField<String>(
+                        key: ValueKey(effectiveSelection ?? 'no-category'),
+                        initialValue: effectiveSelection,
+                        dropdownColor: const Color(0xFF242730),
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          labelText: 'Focus Category',
+                          labelStyle: TextStyle(color: Colors.white70),
+                        ),
+                        items: categories
+                            .map(
+                              (item) => DropdownMenuItem(
+                                value: item,
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: BoxDecoration(
+                                        color: categoryColors[item] ??
+                                            Colors.white70,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      item,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: onCategoryChanged,
+                      ),
               ),
               const SizedBox(width: 10),
               IconButton.filledTonal(

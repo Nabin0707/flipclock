@@ -363,10 +363,21 @@ class FocusCategoriesNotifier extends StateNotifier<List<String>> {
     }
     try {
       final decoded = jsonDecode(raw) as List<dynamic>;
-      final values = decoded.map((e) => e.toString().trim()).where((e) {
-        return e.isNotEmpty;
-      }).toList(growable: false);
+      final seen = <String>{};
+      final values = <String>[];
+      for (final entry in decoded) {
+        final value = entry.toString().trim();
+        if (value.isEmpty) {
+          continue;
+        }
+        final key = value.toLowerCase();
+        if (seen.add(key)) {
+          values.add(value);
+        }
+      }
       state = values.isEmpty ? _kDefaultCategories : values;
+      // Persist sanitized categories to avoid future dropdown assertion crashes.
+      _persist();
     } catch (_) {
       state = _kDefaultCategories;
     }
