@@ -113,7 +113,6 @@ class _FocusScreenState extends ConsumerState<FocusScreen>
                   ),
                   child: Row(
                     children: [
-                      const BackButton(color: Colors.white54),
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(

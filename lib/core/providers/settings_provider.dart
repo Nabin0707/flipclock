@@ -32,7 +32,11 @@ class SettingsNotifier extends StateNotifier<FlipClockTheme> {
   }
 
   Future<void> _save() async {
-    await _prefs.setString(_kFlipClockThemeKey, state.toJsonString());
+    try {
+      await _prefs.setString(_kFlipClockThemeKey, state.toJsonString());
+    } catch (_) {
+      // Silently ignore persistence failures; state is still updated in memory.
+    }
   }
 
   void updateCardColor(Color color) {
