@@ -2,16 +2,115 @@ import 'package:flutter/material.dart';
 import 'package:flutter_clean_architecture/features/stopwatch/providers/stopwatch_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class StopwatchScreen extends ConsumerWidget {
+class StopwatchScreen extends ConsumerStatefulWidget {
   const StopwatchScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<StopwatchScreen> createState() => _StopwatchScreenState();
+}
+
+class _StopwatchScreenState extends ConsumerState<StopwatchScreen> {
+  bool _isFullscreen = false;
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(stopwatchProvider);
     final notifier = ref.read(stopwatchProvider.notifier);
 
+    if (_isFullscreen) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF070808),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Stopwatch Fullscreen',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _isFullscreen = false;
+                        });
+                      },
+                      icon: const Icon(Icons.fullscreen_exit,
+                          color: Colors.white),
+                      tooltip: 'Exit fullscreen',
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    _formatDuration(state.elapsed),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 84,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.4,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: state.isRunning ? null : notifier.start,
+                      icon: const Icon(Icons.play_arrow),
+                      label: const Text('Start'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: state.isRunning ? notifier.pause : null,
+                      icon: const Icon(Icons.pause),
+                      label: const Text('Pause'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: state.isRunning ? notifier.lap : null,
+                      icon: const Icon(Icons.flag),
+                      label: const Text('Lap'),
+                    ),
+                    TextButton.icon(
+                      onPressed: notifier.reset,
+                      icon: const Icon(Icons.restore),
+                      label: const Text('Reset'),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Stopwatch')),
+      appBar: AppBar(
+        title: const Text('Stopwatch'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              setState(() {
+                _isFullscreen = true;
+              });
+            },
+            icon: const Icon(Icons.fullscreen),
+            tooltip: 'Fullscreen clock',
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

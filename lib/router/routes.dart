@@ -3,6 +3,7 @@ abstract final class Routes {
   static const clock = '/clock';
   static const settings = '/settings';
   static const focus = '/focus';
+  static const focusAnalytics = '/focus-analytics';
   static const timer = '/timer';
   static const stopwatch = '/stopwatch';
   static const pomodoro = '/pomodoro';

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_clean_architecture/features/focus/presentation/focus_analytics_screen.dart';
 import 'package:flutter_clean_architecture/features/clock/presentation/clock_screen.dart';
 import 'package:flutter_clean_architecture/features/focus/presentation/focus_screen.dart';
 import 'package:flutter_clean_architecture/features/pomodoro/presentation/pomodoro_screen.dart';
@@ -29,6 +30,10 @@ class AppRouter {
           GoRoute(
             path: Routes.focus,
             builder: (context, state) => const FocusScreen(),
+          ),
+          GoRoute(
+            path: Routes.focusAnalytics,
+            builder: (context, state) => const FocusAnalyticsScreen(),
           ),
           GoRoute(
             path: Routes.timer,
