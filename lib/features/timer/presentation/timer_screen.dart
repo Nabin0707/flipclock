@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_clean_architecture/core/providers/settings_provider.dart';
+import 'package:flutter_clean_architecture/core/theme/flip_clock_theme.dart';
 import 'package:flutter_clean_architecture/features/timer/providers/timer_provider.dart';
 import 'package:flutter_clean_architecture/widgets/flip_clock_display.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -108,8 +109,8 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
     );
   }
 
-  Widget _buildPicker(dynamic flipTheme) {
-    final accentColor = flipTheme.accentColor as Color;
+  Widget _buildPicker(FlipClockTheme flipTheme) {
+    final accentColor = flipTheme.accentColor;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -164,8 +165,8 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
     );
   }
 
-  Widget _buildRunning(TimerState timerState, dynamic flipTheme) {
-    final accentColor = flipTheme.accentColor as Color;
+  Widget _buildRunning(TimerState timerState, FlipClockTheme flipTheme) {
+    final accentColor = flipTheme.accentColor;
     final r = timerState.remaining;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,

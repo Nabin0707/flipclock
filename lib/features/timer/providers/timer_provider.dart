@@ -41,6 +41,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
   TimerNotifier() : super(const TimerState());
 
   Timer? _timer;
+  bool _disposed = false;
 
   void setDuration(Duration duration) {
     _timer?.cancel();
@@ -65,7 +66,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
             isFinished: true,
           );
           Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
+            if (!_disposed) {
               state = state.copyWith(isFinished: false);
               start();
             }
@@ -108,6 +109,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
 
   @override
   void dispose() {
+    _disposed = true;
     _timer?.cancel();
     super.dispose();
   }
