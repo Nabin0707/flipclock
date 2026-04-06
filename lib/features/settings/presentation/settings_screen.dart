@@ -25,6 +25,18 @@ const _cardColors = [
   Color(0xFF795548),
 ];
 
+const _digitColors = [
+  Color(0xFFF2F2F2),
+  Color(0xFFFFFFFF),
+  Color(0xFFFFF176),
+  Color(0xFFB3E5FC),
+  Color(0xFFA5D6A7),
+  Color(0xFFFFCCBC),
+  Color(0xFFD1C4E9),
+  Color(0xFFFFCDD2),
+  Color(0xFFB0BEC5),
+];
+
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -59,6 +71,12 @@ class SettingsScreen extends ConsumerWidget {
                 colors: _cardColors,
                 selected: theme.cardColor,
                 onSelected: notifier.updateCardColor,
+              ),
+              _ColorRow(
+                label: 'Digit Color',
+                colors: _digitColors,
+                selected: theme.cardTextColor,
+                onSelected: notifier.updateCardTextColor,
               ),
               _SliderTile(
                 label: 'Card Border Radius',
