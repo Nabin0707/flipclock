@@ -114,6 +114,6 @@ class TimerNotifier extends StateNotifier<TimerState> {
 }
 
 final timerProvider =
-    StateNotifierProvider.autoDispose<TimerNotifier, TimerState>(
+    StateNotifierProvider<TimerNotifier, TimerState>(
   (ref) => TimerNotifier(),
 );

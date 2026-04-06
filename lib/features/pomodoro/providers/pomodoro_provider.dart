@@ -166,6 +166,6 @@ class PomodoroNotifier extends StateNotifier<PomodoroState> {
 }
 
 final pomodoroProvider =
-    StateNotifierProvider.autoDispose<PomodoroNotifier, PomodoroState>(
+    StateNotifierProvider<PomodoroNotifier, PomodoroState>(
   (ref) => PomodoroNotifier(),
 );

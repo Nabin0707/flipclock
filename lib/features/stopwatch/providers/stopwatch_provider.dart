@@ -116,6 +116,6 @@ class StopwatchNotifier extends StateNotifier<StopwatchState> {
 }
 
 final stopwatchProvider =
-    StateNotifierProvider.autoDispose<StopwatchNotifier, StopwatchState>(
+    StateNotifierProvider<StopwatchNotifier, StopwatchState>(
   (ref) => StopwatchNotifier(),
 );

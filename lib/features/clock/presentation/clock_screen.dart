@@ -3,8 +3,10 @@ import 'package:flutter_clean_architecture/core/providers/settings_provider.dart
 import 'package:flutter_clean_architecture/core/theme/flip_clock_theme.dart';
 import 'package:flutter_clean_architecture/core/utils/time_formatter.dart';
 import 'package:flutter_clean_architecture/features/clock/providers/clock_provider.dart';
+import 'package:flutter_clean_architecture/router/routes.dart';
 import 'package:flutter_clean_architecture/widgets/flip_clock_display.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class ClockScreen extends ConsumerWidget {
   const ClockScreen({super.key});
@@ -35,6 +37,11 @@ class ClockScreen extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: Colors.white54),
+            onPressed: () => context.push(Routes.settings),
+            tooltip: 'Settings',
           ),
         ],
       ),
