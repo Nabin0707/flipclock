@@ -163,15 +163,15 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       body: _isFullscreen
           ? LayoutBuilder(
               builder: (context, constraints) {
-                return SingleChildScrollView(
+                return Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight - 28,
-                      maxWidth: 760,
-                    ),
-                    child: Align(
-                      alignment: Alignment.topCenter,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: 760,
+                        minHeight: constraints.maxHeight - 28,
+                        maxHeight: constraints.maxHeight - 28,
+                      ),
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () {

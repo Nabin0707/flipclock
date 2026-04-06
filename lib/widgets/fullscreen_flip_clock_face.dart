@@ -166,16 +166,20 @@ class _FullscreenClockPanelCard extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final digitHeight = (constraints.maxHeight - 24).clamp(140.0, 240.0);
-          final digitWidth = (constraints.maxWidth * 0.42).clamp(84.0, 160.0);
-          final fontSize = (digitHeight * 0.50).clamp(42.0, 108.0);
+          final availableHeight =
+              (constraints.maxHeight - 24).clamp(140.0, 380.0);
+          final maxDigitWidth =
+              ((constraints.maxWidth - 44) / 2).clamp(100.0, 340.0);
+          final digitWidth =
+              (constraints.maxWidth * 0.42).clamp(84.0, maxDigitWidth);
+          final fontSize = (availableHeight * 0.50).clamp(42.0, 168.0);
 
           return Stack(
             children: [
               Center(
                 child: DigitPair(
                   value: value,
-                  cardHeight: digitHeight,
+                  cardHeight: availableHeight,
                   cardWidth: digitWidth,
                   cardColor: flipTheme.cardColor,
                   textColor: flipTheme.cardTextColor,
@@ -214,7 +218,7 @@ class _FullscreenClockPanelCard extends StatelessWidget {
                     ),
                     child: DigitPair(
                       value: secondsValue!,
-                      cardHeight: digitHeight * 0.28,
+                      cardHeight: availableHeight * 0.28,
                       cardWidth: digitWidth * 0.24,
                       cardColor: flipTheme.cardColor.withValues(alpha: 0.9),
                       textColor: flipTheme.cardTextColor,
