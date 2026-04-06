@@ -40,7 +40,7 @@ class FlipClockTheme {
         flipDurationMs: 450.0,
         glowEnabled: false,
         glowColor: Color(0xFFE8A020),
-        fontFamily: 'RobotoMono',
+        fontFamily: 'Roboto',
         backgroundStyle: BackgroundStyle.solid,
       );
 

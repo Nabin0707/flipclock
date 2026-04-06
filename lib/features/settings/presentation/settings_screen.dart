@@ -14,6 +14,7 @@ const _accentColors = [
 ];
 
 const _cardColors = [
+  Color(0xFF1C1D22),
   Color(0xFFE8A020),
   Color(0xFF1565C0),
   Color(0xFF2E7D32),
@@ -63,8 +64,8 @@ class SettingsScreen extends ConsumerWidget {
                 label: 'Card Border Radius',
                 value: theme.cardBorderRadius,
                 min: 0,
-                max: 16,
-                divisions: 16,
+                max: 28,
+                divisions: 28,
                 onChanged: notifier.setCardBorderRadius,
               ),
               _ToggleTile(

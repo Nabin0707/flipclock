@@ -108,33 +108,43 @@ class _FlipCardState extends State<FlipCard>
           child: Stack(
             children: [
               // Static bottom half of next digit (revealed during second phase)
-              _HalfCard(
-                digit: _nextDigit,
-                isTop: false,
-                width: widget.width,
-                height: widget.height,
-                cardColor: widget.cardColor,
-                textColor: widget.textColor,
-                borderRadius: widget.borderRadius,
-                fontSize: widget.fontSize,
-                fontFamily: widget.fontFamily,
-                decoration: cardDecoration,
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _HalfCard(
+                  digit: _nextDigit,
+                  isTop: false,
+                  width: widget.width,
+                  height: widget.height,
+                  cardColor: widget.cardColor,
+                  textColor: widget.textColor,
+                  borderRadius: widget.borderRadius,
+                  fontSize: widget.fontSize,
+                  fontFamily: widget.fontFamily,
+                  decoration: cardDecoration,
+                ),
               ),
               // Static top half (always shows current digit)
-              _HalfCard(
-                digit: _currentDigit,
-                isTop: true,
-                width: widget.width,
-                height: widget.height,
-                cardColor: widget.cardColor,
-                textColor: widget.textColor,
-                borderRadius: widget.borderRadius,
-                fontSize: widget.fontSize,
-                fontFamily: widget.fontFamily,
-                decoration: cardDecoration,
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                child: _HalfCard(
+                  digit: _currentDigit,
+                  isTop: true,
+                  width: widget.width,
+                  height: widget.height,
+                  cardColor: widget.cardColor,
+                  textColor: widget.textColor,
+                  borderRadius: widget.borderRadius,
+                  fontSize: widget.fontSize,
+                  fontFamily: widget.fontFamily,
+                  decoration: cardDecoration,
+                ),
               ),
-              // Animated flipping bottom half
-              if (_animation.value < 1.0)
+              // Animated flipping bottom half (only while changing digit)
+              if (_controller.isAnimating)
                 Positioned(
                   bottom: 0,
                   left: 0,

@@ -4,7 +4,7 @@ import 'package:flutter_clean_architecture/core/theme/flip_clock_theme.dart';
 import 'package:flutter_clean_architecture/core/utils/time_formatter.dart';
 import 'package:flutter_clean_architecture/features/clock/providers/clock_provider.dart';
 import 'package:flutter_clean_architecture/router/routes.dart';
-import 'package:flutter_clean_architecture/widgets/flip_card.dart';
+import 'package:flutter_clean_architecture/widgets/digit_pair.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -99,37 +99,105 @@ class _ClockBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hourText = is24h ? hours.toString().padLeft(2, '0') : '$hours';
-    final minuteText = minutes.toString().padLeft(2, '0');
-    final secondText = seconds.toString().padLeft(2, '0');
+    final panelColor = flipTheme.cardColor.withValues(alpha: 0.96);
 
     return Center(
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final cardHeight = (constraints.maxHeight * 0.30).clamp(180.0, 300.0);
+          final isLandscape = constraints.maxWidth > constraints.maxHeight;
+
+          if (isLandscape) {
+            final panelHeight =
+                (constraints.maxHeight * 0.78).clamp(170.0, 340.0);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Row(
+                      children: [
+                        Text(
+                          dateString.toUpperCase(),
+                          style: TextStyle(
+                            color:
+                                flipTheme.cardTextColor.withValues(alpha: 0.55),
+                            fontSize: 15,
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          is24h ? '' : '$amPm mode',
+                          style: TextStyle(
+                            color: flipTheme.accentColor.withValues(alpha: 0.8),
+                            fontSize: 13,
+                            letterSpacing: 0.8,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _TimePanelCard(
+                            value: hours,
+                            panelHeight: panelHeight,
+                            flipTheme: flipTheme,
+                            panelColor: panelColor,
+                            periodText: is24h ? null : amPm,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _TimePanelCard(
+                            value: minutes,
+                            panelHeight: panelHeight,
+                            flipTheme: flipTheme,
+                            panelColor: panelColor,
+                            secondsValue: seconds,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final panelHeight =
+              (constraints.maxHeight * 0.30).clamp(170.0, 300.0);
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
             child: Column(
               children: [
                 _TimePanelCard(
-                  valueText: hourText,
-                  cardHeight: cardHeight,
+                  value: hours,
+                  panelHeight: panelHeight,
                   flipTheme: flipTheme,
+                  panelColor: panelColor,
                   periodText: is24h ? null : amPm,
                 ),
                 const SizedBox(height: 16),
                 _TimePanelCard(
-                  valueText: minuteText,
-                  cardHeight: cardHeight,
+                  value: minutes,
+                  panelHeight: panelHeight,
                   flipTheme: flipTheme,
-                  secondsText: secondText,
+                  panelColor: panelColor,
+                  secondsValue: seconds,
                 ),
                 const SizedBox(height: 24),
                 Text(
                   dateString,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.5),
+                    color: flipTheme.cardTextColor.withValues(alpha: 0.55),
                     fontSize: 14,
                     letterSpacing: 1.2,
                   ),
@@ -145,65 +213,53 @@ class _ClockBody extends StatelessWidget {
 
 class _TimePanelCard extends StatelessWidget {
   const _TimePanelCard({
-    required this.valueText,
-    required this.cardHeight,
+    required this.value,
+    required this.panelHeight,
     required this.flipTheme,
+    required this.panelColor,
     this.periodText,
-    this.secondsText,
+    this.secondsValue,
   });
 
-  final String valueText;
-  final double cardHeight;
+  final int value;
+  final double panelHeight;
   final FlipClockTheme flipTheme;
+  final Color panelColor;
   final String? periodText;
-  final String? secondsText;
+  final int? secondsValue;
 
   @override
   Widget build(BuildContext context) {
-    final digitChars = valueText.split('');
-
     return Container(
       width: double.infinity,
-      height: cardHeight,
+      height: panelHeight,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       decoration: BoxDecoration(
-        color: flipTheme.cardColor,
+        color: panelColor,
         borderRadius: BorderRadius.circular(flipTheme.cardBorderRadius),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final gap = 10.0;
-          final digitCount = digitChars.length;
-          final totalGap = gap * (digitCount - 1);
-          final digitWidth = ((constraints.maxWidth - totalGap) / digitCount)
-              .clamp(72.0, 180.0);
-          final digitHeight = (constraints.maxHeight - 20).clamp(140.0, 240.0);
-          final fontSize = (digitHeight * 0.58).clamp(48.0, 140.0);
+          final digitHeight = (constraints.maxHeight - 24).clamp(140.0, 240.0);
+          final digitWidth = (constraints.maxWidth * 0.42).clamp(84.0, 160.0);
+          final fontSize = (digitHeight * 0.50).clamp(42.0, 108.0);
 
           return Stack(
             children: [
               Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var i = 0; i < digitChars.length; i++) ...[
-                      FlipCard(
-                        digit: int.parse(digitChars[i]),
-                        height: digitHeight,
-                        width: digitWidth,
-                        cardColor: flipTheme.cardColor,
-                        textColor: flipTheme.cardTextColor,
-                        borderRadius: flipTheme.cardBorderRadius,
-                        fontSize: fontSize,
-                        fontFamily: flipTheme.fontFamily,
-                        flipDuration: Duration(
-                            milliseconds: flipTheme.flipDurationMs.toInt()),
-                        glowEnabled: false,
-                        glowColor: flipTheme.glowColor,
-                      ),
-                      if (i != digitChars.length - 1) SizedBox(width: gap),
-                    ],
-                  ],
+                child: DigitPair(
+                  value: value,
+                  cardHeight: digitHeight,
+                  cardWidth: digitWidth,
+                  cardColor: flipTheme.cardColor,
+                  textColor: flipTheme.cardTextColor,
+                  borderRadius: flipTheme.cardBorderRadius,
+                  fontSize: fontSize,
+                  fontFamily: flipTheme.fontFamily,
+                  flipDuration:
+                      Duration(milliseconds: flipTheme.flipDurationMs.toInt()),
+                  glowEnabled: flipTheme.glowEnabled,
+                  glowColor: flipTheme.glowColor,
                 ),
               ),
               if (periodText != null)
@@ -212,37 +268,39 @@ class _TimePanelCard extends StatelessWidget {
                   bottom: 0,
                   child: Text(
                     periodText!,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: flipTheme.accentColor,
                       fontWeight: FontWeight.w600,
-                      fontSize: 36,
+                      fontSize: 34,
                     ),
                   ),
                 ),
-              if (secondsText != null)
+              if (secondsValue != null)
                 Positioned(
                   right: 0,
                   bottom: 0,
-                  child: Row(
-                    children: secondsText!.split('').map((ch) {
-                      return Container(
-                        margin: const EdgeInsets.only(left: 6),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.22),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          ch,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 30,
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: flipTheme.accentColor.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DigitPair(
+                      value: secondsValue!,
+                      cardHeight: digitHeight * 0.28,
+                      cardWidth: digitWidth * 0.24,
+                      cardColor: flipTheme.cardColor.withValues(alpha: 0.9),
+                      textColor: flipTheme.cardTextColor,
+                      borderRadius:
+                          (flipTheme.cardBorderRadius * 0.45).clamp(4.0, 14.0),
+                      fontSize: fontSize * 0.28,
+                      fontFamily: flipTheme.fontFamily,
+                      flipDuration: Duration(
+                          milliseconds: flipTheme.flipDurationMs.toInt()),
+                      glowEnabled: flipTheme.glowEnabled,
+                      glowColor: flipTheme.glowColor,
+                    ),
                   ),
                 ),
             ],
