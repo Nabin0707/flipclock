@@ -27,7 +27,7 @@ abstract final class AuthGuard {
       return Routes.login;
     } else if (isAuthenticated && isAuthRoute) {
       // User is authenticated but tries to access auth routes
-      return Routes.home;
+      return Routes.clock;
     }
 
     // No redirect needed

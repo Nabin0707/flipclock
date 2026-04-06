@@ -11,5 +11,11 @@ abstract final class Routes {
   // Demo Routes
   static const demo = '/demo';
 
-  // Other feature routes can be added here
+  // FlipClock Routes
+  static const clock = '/clock';
+  static const stopwatch = '/stopwatch';
+  static const timer = '/timer';
+  static const pomodoro = '/pomodoro';
+  static const focus = '/focus';
+  static const settings = '/settings';
 }
