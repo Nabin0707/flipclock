@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+enum FocusAnalyticsRange { day, week, month, year }
+
 @immutable
 class FocusSession {
   const FocusSession({
@@ -125,4 +127,42 @@ class FocusAnalytics {
     monthlyAverage: Duration.zero,
     categoryBreakdown: <String, Duration>{},
   );
+}
+
+@immutable
+class FocusBucket {
+  const FocusBucket({required this.label, required this.duration});
+
+  final String label;
+  final Duration duration;
+}
+
+@immutable
+class FocusRangeAnalytics {
+  const FocusRangeAnalytics({
+    required this.range,
+    required this.buckets,
+    required this.total,
+    required this.averagePerBucket,
+    required this.focusPercent,
+    required this.categoryBreakdown,
+  });
+
+  final FocusAnalyticsRange range;
+  final List<FocusBucket> buckets;
+  final Duration total;
+  final Duration averagePerBucket;
+  final double focusPercent;
+  final Map<String, Duration> categoryBreakdown;
+
+  static FocusRangeAnalytics empty(FocusAnalyticsRange range) {
+    return FocusRangeAnalytics(
+      range: range,
+      buckets: const [],
+      total: Duration.zero,
+      averagePerBucket: Duration.zero,
+      focusPercent: 0,
+      categoryBreakdown: const {},
+    );
+  }
 }

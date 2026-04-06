@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_clean_architecture/core/providers/shared_preferences_provider.dart';
 import 'package:flutter_clean_architecture/features/focus/domain/focus_models.dart';
@@ -13,6 +14,18 @@ const _kDefaultCategories = <String>[
   'Workout',
   'Gaming',
   'Meditation',
+];
+
+const _kCategoryPalette = <Color>[
+  Color(0xFF4FC3F7),
+  Color(0xFFFFB74D),
+  Color(0xFFA5D6A7),
+  Color(0xFFE57373),
+  Color(0xFFCE93D8),
+  Color(0xFF90CAF9),
+  Color(0xFFFFCC80),
+  Color(0xFF80CBC4),
+  Color(0xFFF48FB1),
 ];
 
 final focusSessionsProvider =
@@ -38,6 +51,28 @@ final focusTimerProvider =
 final focusAnalyticsProvider = Provider<FocusAnalytics>((ref) {
   final sessions = ref.watch(focusSessionsProvider);
   return calculateFocusAnalytics(sessions, now: DateTime.now());
+});
+
+final focusRangeProvider =
+    StateProvider<FocusAnalyticsRange>((ref) => FocusAnalyticsRange.week);
+
+final focusRangeAnalyticsProvider = Provider<FocusRangeAnalytics>((ref) {
+  final sessions = ref.watch(focusSessionsProvider);
+  final range = ref.watch(focusRangeProvider);
+  return calculateFocusRangeAnalytics(
+    sessions,
+    range: range,
+    now: DateTime.now(),
+  );
+});
+
+final focusCategoryColorsProvider = Provider<Map<String, Color>>((ref) {
+  final categories = ref.watch(focusCategoriesProvider);
+  final map = <String, Color>{};
+  for (final category in categories) {
+    map[category] = _colorForCategory(category);
+  }
+  return Map<String, Color>.unmodifiable(map);
 });
 
 FocusAnalytics calculateFocusAnalytics(
@@ -98,6 +133,170 @@ FocusAnalytics calculateFocusAnalytics(
     monthlyAverage: monthlyAverage,
     categoryBreakdown: Map<String, Duration>.unmodifiable(categoryMap),
   );
+}
+
+FocusRangeAnalytics calculateFocusRangeAnalytics(
+  List<FocusSession> sessions, {
+  required FocusAnalyticsRange range,
+  required DateTime now,
+}) {
+  if (sessions.isEmpty) {
+    return FocusRangeAnalytics.empty(range);
+  }
+
+  final bucketLabels = _buildLabels(range, now);
+  final bucketDurations = List<Duration>.filled(
+    bucketLabels.length,
+    Duration.zero,
+    growable: false,
+  );
+  final categoryMap = <String, Duration>{};
+
+  final start = _rangeStart(range, now);
+  final endExclusive = _rangeEndExclusive(range, now);
+
+  for (final session in sessions) {
+    final endedAt = session.endedAt;
+    if (endedAt.isBefore(start) || !endedAt.isBefore(endExclusive)) {
+      continue;
+    }
+
+    final duration = session.duration;
+    final index = _bucketIndex(range, endedAt, start);
+    if (index >= 0 && index < bucketDurations.length) {
+      bucketDurations[index] = bucketDurations[index] + duration;
+    }
+    categoryMap[session.category] =
+        (categoryMap[session.category] ?? Duration.zero) + duration;
+  }
+
+  final buckets = List<FocusBucket>.generate(bucketLabels.length, (i) {
+    return FocusBucket(label: bucketLabels[i], duration: bucketDurations[i]);
+  }, growable: false);
+
+  final total = bucketDurations.fold<Duration>(
+    Duration.zero,
+    (prev, item) => prev + item,
+  );
+
+  final averagePerBucket = bucketDurations.isEmpty
+      ? Duration.zero
+      : Duration(milliseconds: total.inMilliseconds ~/ bucketDurations.length);
+
+  final rangeCapacityMinutes = _rangeCapacityMinutes(range, now);
+  final focusPercent = rangeCapacityMinutes == 0
+      ? 0
+      : (total.inMinutes / rangeCapacityMinutes) * 100;
+
+  return FocusRangeAnalytics(
+    range: range,
+    buckets: buckets,
+    total: total,
+    averagePerBucket: averagePerBucket,
+    focusPercent: focusPercent.clamp(0.0, 100.0).toDouble(),
+    categoryBreakdown: Map<String, Duration>.unmodifiable(categoryMap),
+  );
+}
+
+DateTime _rangeStart(FocusAnalyticsRange range, DateTime now) {
+  switch (range) {
+    case FocusAnalyticsRange.day:
+      return DateTime(now.year, now.month, now.day);
+    case FocusAnalyticsRange.week:
+      final dayStart = DateTime(now.year, now.month, now.day);
+      return dayStart.subtract(Duration(days: now.weekday - 1));
+    case FocusAnalyticsRange.month:
+      return DateTime(now.year, now.month, 1);
+    case FocusAnalyticsRange.year:
+      return DateTime(now.year, 1, 1);
+  }
+}
+
+DateTime _rangeEndExclusive(FocusAnalyticsRange range, DateTime now) {
+  switch (range) {
+    case FocusAnalyticsRange.day:
+      return DateTime(now.year, now.month, now.day + 1);
+    case FocusAnalyticsRange.week:
+      final start = _rangeStart(range, now);
+      return start.add(const Duration(days: 7));
+    case FocusAnalyticsRange.month:
+      return DateTime(now.year, now.month + 1, 1);
+    case FocusAnalyticsRange.year:
+      return DateTime(now.year + 1, 1, 1);
+  }
+}
+
+int _bucketIndex(FocusAnalyticsRange range, DateTime endedAt, DateTime start) {
+  switch (range) {
+    case FocusAnalyticsRange.day:
+      return endedAt.hour;
+    case FocusAnalyticsRange.week:
+      return endedAt.weekday - 1;
+    case FocusAnalyticsRange.month:
+      return endedAt.day - 1;
+    case FocusAnalyticsRange.year:
+      return endedAt.month - 1;
+  }
+}
+
+List<String> _buildLabels(FocusAnalyticsRange range, DateTime now) {
+  switch (range) {
+    case FocusAnalyticsRange.day:
+      return List<String>.generate(
+        24,
+        (i) => i.toString().padLeft(2, '0'),
+        growable: false,
+      );
+    case FocusAnalyticsRange.week:
+      return const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    case FocusAnalyticsRange.month:
+      final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+      return List<String>.generate(
+        daysInMonth,
+        (i) => '${i + 1}',
+        growable: false,
+      );
+    case FocusAnalyticsRange.year:
+      return const [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+  }
+}
+
+int _rangeCapacityMinutes(FocusAnalyticsRange range, DateTime now) {
+  switch (range) {
+    case FocusAnalyticsRange.day:
+      return 24 * 60;
+    case FocusAnalyticsRange.week:
+      return 7 * 24 * 60;
+    case FocusAnalyticsRange.month:
+      final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+      return daysInMonth * 24 * 60;
+    case FocusAnalyticsRange.year:
+      final daysInYear = DateTime(now.year, 12, 31)
+              .difference(DateTime(now.year, 1, 1))
+              .inDays +
+          1;
+      return daysInYear * 24 * 60;
+  }
+}
+
+Color _colorForCategory(String category) {
+  final hash = category.codeUnits
+      .fold<int>(0, (prev, c) => (prev * 31 + c) & 0x7fffffff);
+  final index = hash % _kCategoryPalette.length;
+  return _kCategoryPalette[index];
 }
 
 class FocusSessionsNotifier extends StateNotifier<List<FocusSession>> {
