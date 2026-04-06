@@ -2,6 +2,7 @@ import 'package:flutter_clean_architecture/core/theme/flip_clock_theme.dart';
 import 'package:flutter_clean_architecture/features/auth/providers/auth_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _kFlipClockThemeKey = 'flip_clock_theme';
 const _kClockFormatKey = 'clock_format_24h';
@@ -17,7 +18,7 @@ class SettingsNotifier extends StateNotifier<FlipClockTheme> {
     _load();
   }
 
-  final dynamic _prefs; // SharedPreferences
+  final SharedPreferences _prefs;
 
   void _load() {
     final json = _prefs.getString(_kFlipClockThemeKey);
@@ -106,7 +107,7 @@ class ClockFormatNotifier extends StateNotifier<bool> {
     _load();
   }
 
-  final dynamic _prefs;
+  final SharedPreferences _prefs;
 
   void _load() {
     state = _prefs.getBool(_kClockFormatKey) ?? true;
