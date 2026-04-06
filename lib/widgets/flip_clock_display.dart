@@ -31,10 +31,9 @@ class FlipClockDisplay extends ConsumerWidget {
     final cardWidth = 60.0 * cardScale;
     final fontSize = 52.0 * cardScale;
     final sepFontSize = 48.0 * cardScale;
-    final flipDuration =
-        Duration(milliseconds: theme.flipDurationMs.toInt());
+    final flipDuration = Duration(milliseconds: theme.flipDurationMs.toInt());
 
-    return Row(
+    final clockRow = Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -104,6 +103,19 @@ class FlipClockDisplay extends ConsumerWidget {
           ),
         ],
       ],
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: clockRow,
+          ),
+        );
+      },
     );
   }
 }

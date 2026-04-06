@@ -31,14 +31,14 @@ class FlipClockTheme {
   });
 
   static FlipClockTheme get defaultDark => const FlipClockTheme(
-        cardColor: Color(0xFFE8A020),
-        cardTextColor: Color(0xFFFFF8E7),
-        backgroundColor: Color(0xFF0D0D0D),
+        cardColor: Color(0xFF1C1D22),
+        cardTextColor: Color(0xFFF2F2F2),
+        backgroundColor: Color(0xFF070808),
         separatorColor: Color(0xFFE8A020),
         accentColor: Color(0xFFE8A020),
-        cardBorderRadius: 8.0,
+        cardBorderRadius: 22.0,
         flipDurationMs: 450.0,
-        glowEnabled: true,
+        glowEnabled: false,
         glowColor: Color(0xFFE8A020),
         fontFamily: 'RobotoMono',
         backgroundStyle: BackgroundStyle.solid,
@@ -111,8 +111,7 @@ class FlipClockTheme {
         glowEnabled: json['glowEnabled'] as bool,
         glowColor: Color(json['glowColor'] as int),
         fontFamily: json['fontFamily'] as String,
-        backgroundStyle:
-            BackgroundStyle.values[json['backgroundStyle'] as int],
+        backgroundStyle: BackgroundStyle.values[json['backgroundStyle'] as int],
       );
 
   String toJsonString() => jsonEncode(toJson());

@@ -20,11 +20,21 @@ class SettingsNotifier extends StateNotifier<FlipClockTheme> {
 
   final SharedPreferences _prefs;
 
+  bool _isLegacyOrangeTheme(FlipClockTheme theme) {
+    return theme.cardColor.toARGB32() == const Color(0xFFE8A020).toARGB32() &&
+        theme.cardTextColor.toARGB32() == const Color(0xFFFFF8E7).toARGB32() &&
+        theme.backgroundColor.toARGB32() == const Color(0xFF0D0D0D).toARGB32();
+  }
+
   void _load() {
     final json = _prefs.getString(_kFlipClockThemeKey);
     if (json != null) {
       try {
         state = FlipClockTheme.fromJsonString(json);
+        if (_isLegacyOrangeTheme(state)) {
+          state = FlipClockTheme.defaultDark;
+          _save();
+        }
       } catch (_) {
         state = FlipClockTheme.defaultDark;
       }
