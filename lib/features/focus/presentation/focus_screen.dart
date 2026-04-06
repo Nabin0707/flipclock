@@ -1,9 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_clean_architecture/core/providers/settings_provider.dart';
+import 'package:flutter_clean_architecture/core/theme/flip_clock_theme.dart';
+import 'package:flutter_clean_architecture/core/utils/time_formatter.dart';
 import 'package:flutter_clean_architecture/features/focus/domain/focus_models.dart';
 import 'package:flutter_clean_architecture/features/focus/providers/focus_provider.dart';
 import 'package:flutter_clean_architecture/router/routes.dart';
+import 'package:flutter_clean_architecture/widgets/fullscreen_flip_clock_face.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,7 +22,7 @@ class FocusScreen extends ConsumerStatefulWidget {
 class _FocusScreenState extends ConsumerState<FocusScreen> {
   Timer? _ticker;
   String? _selectedCategory;
-  bool _isFullscreen = true;
+  bool _isFullscreen = false;
 
   @override
   void initState() {
@@ -27,11 +32,31 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         setState(() {});
       }
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _isFullscreen) {
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      }
+    });
+  }
+
+  Future<void> _setFullscreen(bool value) async {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isFullscreen = value;
+    });
+
+    await SystemChrome.setEnabledSystemUIMode(
+      value ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
+    );
   }
 
   @override
   void dispose() {
     _ticker?.cancel();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -93,6 +118,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     final timerState = ref.watch(focusTimerProvider);
     final timerNotifier = ref.read(focusTimerProvider.notifier);
     final categoryColors = ref.watch(focusCategoryColorsProvider);
+    final flipTheme = ref.watch(settingsProvider);
 
     final effectiveSelectedCategory = categories.isEmpty
         ? null
@@ -113,79 +139,65 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF070808),
-      appBar: AppBar(
-        title: const Text('Focus Mode'),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _isFullscreen = !_isFullscreen;
-              });
-            },
-            icon: Icon(
-              _isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
-            ),
-            tooltip: _isFullscreen ? 'Exit fullscreen' : 'Fullscreen',
-          ),
-          IconButton(
-            onPressed: () => context.push(Routes.focusAnalytics),
-            icon: const Icon(Icons.analytics_outlined),
-            tooltip: 'Open analytics',
-          ),
-        ],
-      ),
-      body: _isFullscreen
-          ? Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 760),
-                  child: _FullScreenFocusHero(
-                    timerState: timerState,
-                    liveElapsed: timerNotifier.liveElapsed,
-                    selectedCategory: effectiveSelectedCategory,
-                    categories: categories,
-                    categoryColors: categoryColors,
-                    onCategoryChanged: (value) {
-                      setState(() {
-                        _selectedCategory = value;
-                      });
-                    },
-                    onAddCategory: () => _promptAddCategory(context),
-                    onStart: () {
-                      if (effectiveSelectedCategory == null) {
-                        return;
-                      }
-                      timerNotifier.start(effectiveSelectedCategory);
-                    },
-                    onPause: timerNotifier.pause,
-                    onReset: timerNotifier.reset,
-                    onStopAndSave: () async {
-                      final messenger = ScaffoldMessenger.of(context);
-                      final session =
-                          await timerNotifier.stopAndCreateSession();
-                      if (!mounted || session == null) {
-                        return;
-                      }
-                      await ref
-                          .read(focusSessionsProvider.notifier)
-                          .addSession(session);
-                      if (!mounted) {
-                        return;
-                      }
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Session saved: ${_formatDuration(session.duration)} (${session.category})',
-                          ),
-                        ),
-                      );
-                    },
+      appBar: _isFullscreen
+          ? null
+          : AppBar(
+              title: const Text('Focus Mode'),
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              actions: [
+                IconButton(
+                  onPressed: () => _setFullscreen(!_isFullscreen),
+                  icon: Icon(
+                    _isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
                   ),
+                  tooltip: _isFullscreen ? 'Exit fullscreen' : 'Fullscreen',
                 ),
-              ),
+                IconButton(
+                  onPressed: () => context.push(Routes.focusAnalytics),
+                  icon: const Icon(Icons.analytics_outlined),
+                  tooltip: 'Open analytics',
+                ),
+              ],
+            ),
+      body: _isFullscreen
+          ? LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight - 28,
+                      maxWidth: 760,
+                    ),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          _setFullscreen(false);
+                        },
+                        onDoubleTap: () {
+                          _setFullscreen(false);
+                        },
+                        child: _FocusFullscreenClock(
+                          flipTheme: flipTheme,
+                          timerState: timerState,
+                          liveElapsed: timerNotifier.liveElapsed,
+                          selectedCategory: effectiveSelectedCategory,
+                          categories: categories,
+                          categoryColors: categoryColors,
+                          onCategoryChanged: (value) {
+                            setState(() {
+                              _selectedCategory = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             )
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
@@ -260,6 +272,51 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   }
 }
 
+class _FocusFullscreenClock extends StatelessWidget {
+  const _FocusFullscreenClock({
+    required this.flipTheme,
+    required this.timerState,
+    required this.liveElapsed,
+    required this.selectedCategory,
+    required this.categories,
+    required this.categoryColors,
+    required this.onCategoryChanged,
+  });
+
+  final FlipClockTheme flipTheme;
+  final FocusTimerState timerState;
+  final Duration liveElapsed;
+  final String? selectedCategory;
+  final List<String> categories;
+  final Map<String, Color> categoryColors;
+  final ValueChanged<String?> onCategoryChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveSelection =
+        categories.contains(selectedCategory) ? selectedCategory : null;
+    final accent =
+        categoryColors[effectiveSelection] ?? const Color(0xFFE8A020);
+    final dateString = formatDate(DateTime.now());
+    final currentHours = liveElapsed.inHours % 24;
+    final currentMinutes = liveElapsed.inMinutes % 60;
+    final currentSeconds = liveElapsed.inSeconds % 60;
+    final focusTheme = flipTheme.copyWith(
+      accentColor: accent,
+      separatorColor: accent,
+      glowColor: accent,
+    );
+    return FullscreenFlipClockFace(
+      hours: currentHours,
+      minutes: currentMinutes,
+      seconds: currentSeconds,
+      dateString: dateString,
+      flipTheme: focusTheme,
+      secondaryLabel: (effectiveSelection ?? 'Focus').toUpperCase(),
+    );
+  }
+}
+
 class _FullScreenFocusHero extends StatelessWidget {
   const _FullScreenFocusHero({
     required this.timerState,
@@ -296,7 +353,6 @@ class _FullScreenFocusHero extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 380),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF1B1D23),
