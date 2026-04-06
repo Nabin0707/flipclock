@@ -102,6 +102,7 @@ class _FlipCardState extends State<FlipCard>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, _) {
+        final seamThickness = (widget.height * 0.012).clamp(1.5, 3.0);
         return SizedBox(
           width: widget.width,
           height: widget.height,
@@ -151,6 +152,15 @@ class _FlipCardState extends State<FlipCard>
                   right: 0,
                   child: _buildFlippingHalf(),
                 ),
+              Positioned(
+                left: 0,
+                right: 0,
+                top: (widget.height / 2) - seamThickness,
+                child: _CenterSeam(
+                  thickness: seamThickness,
+                  highlightColor: widget.textColor.withValues(alpha: 0.18),
+                ),
+              ),
             ],
           ),
         );
@@ -286,20 +296,34 @@ class _HalfCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // Divider line in middle
-              if (isTop)
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 1,
-                    color: Colors.black.withOpacity(0.3),
-                  ),
-                ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _CenterSeam extends StatelessWidget {
+  const _CenterSeam({
+    required this.thickness,
+    required this.highlightColor,
+  });
+
+  final double thickness;
+  final Color highlightColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(height: 1, color: highlightColor),
+          Container(
+              height: thickness, color: Colors.black.withValues(alpha: 0.85)),
+          Container(height: 1, color: Colors.black.withValues(alpha: 0.35)),
+        ],
       ),
     );
   }
