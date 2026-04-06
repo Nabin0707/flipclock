@@ -23,4 +23,10 @@ abstract final class NavigationService {
   static void goToClock(BuildContext context) => go(context, Routes.clock);
   static void goToSettings(BuildContext context) =>
       go(context, Routes.settings);
+  static void goToFocus(BuildContext context) => go(context, Routes.focus);
+  static void goToTimer(BuildContext context) => go(context, Routes.timer);
+  static void goToStopwatch(BuildContext context) =>
+      go(context, Routes.stopwatch);
+  static void goToPomodoro(BuildContext context) =>
+      go(context, Routes.pomodoro);
 }

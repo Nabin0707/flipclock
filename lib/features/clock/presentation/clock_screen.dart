@@ -37,6 +37,32 @@ class ClockScreen extends ConsumerWidget {
               ),
             ),
           ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.apps_outlined, color: Colors.white54),
+            tooltip: 'Tools',
+            onSelected: (value) {
+              switch (value) {
+                case 'focus':
+                  context.push(Routes.focus);
+                  break;
+                case 'timer':
+                  context.push(Routes.timer);
+                  break;
+                case 'stopwatch':
+                  context.push(Routes.stopwatch);
+                  break;
+                case 'pomodoro':
+                  context.push(Routes.pomodoro);
+                  break;
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'focus', child: Text('Focus Mode')),
+              PopupMenuItem(value: 'timer', child: Text('Timer')),
+              PopupMenuItem(value: 'stopwatch', child: Text('Stopwatch')),
+              PopupMenuItem(value: 'pomodoro', child: Text('Pomodoro')),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: Colors.white54),
             onPressed: () => context.push(Routes.settings),
