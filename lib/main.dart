@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_clean_architecture/core/providers/shared_preferences_provider.dart';
 import 'package:flutter_clean_architecture/core/providers/theme_provider.dart';
 import 'package:flutter_clean_architecture/core/theme/app_theme.dart';
-import 'package:flutter_clean_architecture/features/auth/providers/auth_providers.dart';
 import 'package:flutter_clean_architecture/router/app_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -40,7 +40,7 @@ class MyApp extends ConsumerWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return MaterialApp.router(
-          title: 'Flutter Clean Architecture',
+          title: 'Flip Clock',
           debugShowCheckedModeBanner: false,
           routerConfig: AppRouter.router,
           theme: AppTheme.lightTheme,

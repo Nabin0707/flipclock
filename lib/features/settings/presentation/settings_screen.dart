@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_clean_architecture/core/providers/settings_provider.dart';
-import 'package:flutter_clean_architecture/core/theme/flip_clock_theme.dart';
-import 'package:flutter_clean_architecture/features/pomodoro/providers/pomodoro_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _accentColors = [
@@ -34,7 +32,6 @@ class SettingsScreen extends ConsumerWidget {
     final theme = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
     final is24h = ref.watch(clockFormatProvider);
-    final pomodoroState = ref.watch(pomodoroProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -101,74 +98,6 @@ class SettingsScreen extends ConsumerWidget {
                 value: is24h,
                 onChanged: (v) =>
                     ref.read(clockFormatProvider.notifier).set24h(v),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _Section(
-            title: 'POMODORO',
-            children: [
-              _SliderTile(
-                label: 'Work Duration (min)',
-                value: pomodoroState.settings.workDuration.inMinutes
-                    .toDouble(),
-                min: 5,
-                max: 60,
-                divisions: 11,
-                displayValue:
-                    '${pomodoroState.settings.workDuration.inMinutes}m',
-                onChanged: (v) =>
-                    ref.read(pomodoroProvider.notifier).updateSettings(
-                          PomodoroSettings(
-                            workDuration: Duration(minutes: v.toInt()),
-                            shortBreakDuration: pomodoroState
-                                .settings.shortBreakDuration,
-                            longBreakDuration:
-                                pomodoroState.settings.longBreakDuration,
-                          ),
-                        ),
-              ),
-              _SliderTile(
-                label: 'Short Break (min)',
-                value: pomodoroState.settings.shortBreakDuration.inMinutes
-                    .toDouble(),
-                min: 1,
-                max: 15,
-                divisions: 14,
-                displayValue:
-                    '${pomodoroState.settings.shortBreakDuration.inMinutes}m',
-                onChanged: (v) =>
-                    ref.read(pomodoroProvider.notifier).updateSettings(
-                          PomodoroSettings(
-                            workDuration:
-                                pomodoroState.settings.workDuration,
-                            shortBreakDuration:
-                                Duration(minutes: v.toInt()),
-                            longBreakDuration:
-                                pomodoroState.settings.longBreakDuration,
-                          ),
-                        ),
-              ),
-              _SliderTile(
-                label: 'Long Break (min)',
-                value: pomodoroState.settings.longBreakDuration.inMinutes
-                    .toDouble(),
-                min: 5,
-                max: 30,
-                divisions: 25,
-                displayValue:
-                    '${pomodoroState.settings.longBreakDuration.inMinutes}m',
-                onChanged: (v) =>
-                    ref.read(pomodoroProvider.notifier).updateSettings(
-                          PomodoroSettings(
-                            workDuration:
-                                pomodoroState.settings.workDuration,
-                            shortBreakDuration:
-                                pomodoroState.settings.shortBreakDuration,
-                            longBreakDuration:
-                                Duration(minutes: v.toInt()),
-                          ),
-                        ),
               ),
             ],
           ),

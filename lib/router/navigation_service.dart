@@ -20,9 +20,7 @@ abstract final class NavigationService {
     context.go(location, extra: extra);
   }
 
-  // Navigation shortcuts for common routes
-  static void goToHome(BuildContext context) => go(context, Routes.home);
-  static void goToLogin(BuildContext context) => go(context, Routes.login);
-  static void goToProfile(BuildContext context) => go(context, Routes.profile);
-  static void goToDemo(BuildContext context) => go(context, Routes.demo);
+  static void goToClock(BuildContext context) => go(context, Routes.clock);
+  static void goToSettings(BuildContext context) =>
+      go(context, Routes.settings);
 }
